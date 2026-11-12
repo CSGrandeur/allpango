@@ -1,12 +1,12 @@
-# baidupan
+# panpost
 
-baidupan 是一个命令行程序，用[百度网盘开放平台](https://pan.baidu.com/union/doc/)的现行接口，把文件传到该应用自己的 `/apps/应用名` 目录。
+panpost 是一个命令行程序，用[百度网盘开放平台](https://pan.baidu.com/union/doc/)的现行接口，把文件传到该应用自己的 `/apps/应用名` 目录。
 
 它面向备份：刷新令牌、列出目录、上传文件、跳过没有变化的文件。它不是网盘图形客户端，也不提供下载加速。
 
 ## 现状
 
-仓库已建立。上传、列表和登录还没有实现。`baidupan` 现在只会打印一句说明并退出。
+仓库已建立。上传、列表和登录还没有实现。`panpost` 现在只会打印一句说明并退出。
 
 ## 打算提供的命令
 
@@ -30,7 +30,7 @@ baidupan 是一个命令行程序，用[百度网盘开放平台](https://pan.ba
 需要 Go 1.22 或更高。
 
 ```bash
-go build -o baidupan ./cmd/baidupan
+go build -o panpost ./cmd/panpost
 ```
 
 ## 许可

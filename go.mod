@@ -1,3 +1,3 @@
-module github.com/CSGrandeur/baidupan
+module github.com/CSGrandeur/panpost
 
 go 1.22
