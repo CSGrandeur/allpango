@@ -1,3 +1,3 @@
-module github.com/CSGrandeur/panpost
+module github.com/CSGrandeur/allpango
 
 go 1.22
