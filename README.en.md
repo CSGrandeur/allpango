@@ -22,15 +22,17 @@
 
 <br>
 
-allpango backs up a local directory to Baidu Netdisk: it uploads new and changed files, skips unchanged ones, and records empty files instead of failing. A single static binary with no runtime dependencies; it never deletes or moves remote files. Baidu Netdisk is the first supported disk; later disks will share the same commands.
+allpango backs up a local directory to Baidu Netdisk. Each day's dumps go up; files that have not changed are not sent again. One static binary, no runtime dependencies.
+
+It uploads and overwrites. There are no delete or move commands. Baidu Netdisk is what it talks to today.
 
 ## Features
 
-- **Device-code login.** No callback URL; the access token refreshes before expiry and the new refresh token is written back atomically.
-- **Official upload flow.** Precreate → slices → create; `rtype=3` overwrites the same name instead of producing `name(1)`; slice size grows automatically when the count would exceed the limit.
-- **Incremental sync.** A local manifest records size and mtime of uploaded files; unchanged files are not re-queried. Losing the manifest costs speed, not correctness.
-- **Independent verification.** `verify` lists the cloud recursively and compares size and mtime per file, without the manifest; `sync --seed` rebuilds the manifest from the cloud listing; `--seed-legacy` matches by size only, for taking over directories uploaded by other tools whose timestamp semantics differ.
-- **Explicit failure.** Credentials, token, and directories must be given explicitly; exit 0 on success, non-zero on failure.
+- Login uses a device code, so no callback URL is needed. The access token refreshes before it expires and the new refresh token goes back into the file.
+- Uploads follow the three official steps: precreate, slices, create. A same-name file is overwritten, not saved as `name(1)`. Past 1024 slices the slice size grows on its own.
+- `sync` keeps a local manifest of what it has sent (size and mtime) and stops asking the disk about the rest. Delete the manifest and it gets slower, not wrong.
+- `verify` ignores the manifest and asks the cloud directly, comparing size and mtime file by file. `sync --seed` rebuilds the manifest from a cloud listing; use `--seed-legacy` when taking over another tool's directory, where only size is comparable.
+- Credentials, token and directories are all required. Nothing is guessed. Exit 0 on success, non-zero otherwise.
 
 ## Install
 
@@ -81,55 +83,53 @@ allpango verify --cred cred.json --token token.json --local ./backup --path /app
 
 ## Sync and verify
 
-```mermaid
-flowchart LR
-    Scan["Scan local"] --> M{"Manifest: size+mtime match?"}
-    M -->|yes| Skip["Skip"]
-    M -->|no| Pre["Precreate"]
-    Pre -->|cloud has identical content| Create["Create"]
-    Pre -->|upload needed| Chunk["Slices → create"]
-    Create --> Mark["Write manifest"]
-    Chunk --> Mark
-```
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/flow-en-dark.svg">
+    <img src="docs/images/flow-en-light.svg" alt="allpango sync fan-out: backups compared against the manifest; 3,544 new or changed uploaded, 87,945 unchanged skipped, 401 empty files logged and skipped" width="100%">
+  </picture>
+</p>
 
-The manifest means "uploaded successfully last time", not "the cloud definitely has it now". If it is lost, or the cloud was changed externally, sync falls back to per-file precreate and lets the disk decide; nothing is missed. Change detection uses size and mtime rather than hashing — backup directories mostly hold freshly generated dumps each day, so mtime suffices; content identity is guaranteed by the whole-file MD5 carried in precreate.
+The manifest records that a file was sent successfully once. It does not claim the cloud still has it. If the manifest is gone, or something else changed the cloud, `sync` precreates each file and lets the disk decide.
 
-`verify` is independent of the manifest and compares against the cloud directly — suitable as a post-sync check in scheduled jobs.
+Change detection uses size and mtime, not hashes. A backup directory is mostly fresh dumps each day, so mtime is enough. Precreate carries the whole-file MD5, and the disk may take the content without slices.
+
+A scheduled job can run `verify` after `sync`; it asks the cloud directly.
 
 ## Limits
 
-- Per-file cap by account: 4GB normal / 10GB member / 20GB super member; at most 1024 slices.
-- Empty files cannot be uploaded (API restriction); they are recorded and skipped, not counted as failures.
-- The md5 in listings is a cloud hash, not the file's real MD5; do not compare it with a local one.
-- Rapid upload is up to the disk; on some accounts identical content still uploads slices, and the incremental gain comes from the manifest.
+- Per-file cap depends on the account: 4GB normal, 10GB member, 20GB super member. At most 1024 slices.
+- Empty files cannot go up; the API rejects them. They are logged and skipped, not counted as failures.
+- The md5 in a listing is a cloud hash, not the file's real MD5. Do not compare it with a local one.
+- Rapid upload is the disk's call. On some accounts identical content still goes up in slices; the saving then comes from the requests you skip.
 
 ## FAQ
 
 <details>
 <summary><b>How is the token stored?</b></summary>
 
-In the file given to `--token`, mode 0600, readable only by the current user; refreshes write a temp file then rename, never half-written. The refresh token is single-use: each refresh rotates it and invalidates the old value. Do not edit it by hand or share one copy across processes.
+In the file you pass to `--token`, mode 0600. A refresh writes a temp file and renames it. The refresh token is good for one use: each refresh replaces it and kills the old one, so do not edit the file by hand and do not let two processes share a copy.
 
 </details>
 
 <details>
 <summary><b>What if the refresh token stops working?</b></summary>
 
-Run `login` again. A failed refresh usually means the token is already invalidated; retrying the old value does not help.
+Run `login` again. A failed refresh usually means the token is already dead; retrying the old value will not help.
 
 </details>
 
 <details>
 <summary><b>Will it delete remote files?</b></summary>
 
-No. There are no delete or move commands; sync only touches files that exist locally and leaves anything extra on the cloud alone.
+No. There are no delete or move commands in the program. Sync only deals with files that exist locally; anything extra on the cloud is left alone.
 
 </details>
 
 <details>
 <summary><b>Does an interrupted sync re-upload everything?</b></summary>
 
-No. The manifest is written after each file succeeds, so a re-run skips completed files; the interrupted file is precreated again and the disk decides where to resume.
+No. The manifest is written after each file, so a re-run skips what already went up. The one that was cut off is precreated again and the disk decides where to pick up.
 
 </details>
 

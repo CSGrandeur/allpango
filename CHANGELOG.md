@@ -8,6 +8,9 @@ Entries describe user-facing changes only.
 
 ## [Unreleased]
 
+### Changed
+- Redesigned the sync diagram in the README (pending review).
+
 ## [0.1.0] - 2026-11-12
 
 First release.

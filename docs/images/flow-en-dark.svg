@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 420" width="800" height="420">
+<defs><radialGradient id="halo" cx="0.56" cy="0.52" r="0.62"><stop offset="0" stop-color="#4f7dff" stop-opacity="0.16"/><stop offset="1" stop-color="#4f7dff" stop-opacity="0"/></radialGradient><marker id="mb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#7c9aff"/></marker><marker id="mg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#7d7970"/></marker><marker id="mp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#55524b"/></marker></defs>
+<rect width="800" height="420" rx="20" fill="#0e0e0d"/>
+<rect width="800" height="420" rx="20" fill="url(#halo)"/>
+<text x="44" y="44" font-family="ui-monospace, 'Cascadia Mono', 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="15" letter-spacing="2.5" fill="#8a867e">LOCAL</text>
+<text x="536" y="44" font-family="ui-monospace, 'Cascadia Mono', 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="15" letter-spacing="2.5" fill="#8a867e">BAIDU NETDISK</text>
+<rect x="24" y="58" width="404" height="318" rx="18" fill="none" stroke="#33322e" stroke-width="1.2" stroke-dasharray="3 7"/>
+<path d="M214 230.0 H235" stroke="#b3afa6" stroke-width="2" fill="none" marker-end="url(#mg)"/>
+<path d="M410 230.0 C472 230.0 476 115.0 531 115.0" stroke="#7c9aff" stroke-width="2.8" fill="none" marker-end="url(#mb)"/>
+<path d="M410 230.0 C472 230.0 476 211.0 531 211.0" stroke="#7d7970" stroke-width="2" fill="none" stroke-dasharray="6 6" marker-end="url(#mg)"/>
+<path d="M410 230.0 C472 230.0 476 307.0 531 307.0" stroke="#55524b" stroke-width="2" fill="none" stroke-dasharray="2 6" marker-end="url(#mp)"/>
+<text x="472" y="160" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" fill="#7c9aff" stroke="#0e0e0d" stroke-width="7" paint-order="stroke" stroke-linejoin="round">changed</text>
+<text x="472" y="208" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" fill="#8a867e" stroke="#0e0e0d" stroke-width="7" paint-order="stroke" stroke-linejoin="round">no calls</text>
+<text x="472" y="288" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" fill="#8a867e" stroke="#0e0e0d" stroke-width="7" paint-order="stroke" stroke-linejoin="round">rejected</text>
+<rect x="44" y="178" width="170" height="104" rx="14" fill="#171716" stroke="#2b2a27" stroke-width="1.3"/>
+<text x="66" y="214" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="19" font-weight="650" fill="#f4f1ea">Backups</text>
+<text x="66" y="240" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" fill="#b3afa6">91,890 files</text>
+<text x="66" y="262" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" fill="#b3afa6">50.4 GB</text>
+<rect x="240" y="178" width="170" height="104" rx="14" fill="#171716" stroke="#7c9aff" stroke-width="1.3" stroke-opacity="0.38"/>
+<rect x="240" y="194" width="4" height="72" rx="2" fill="#7c9aff"/>
+<text x="264" y="220" font-family="ui-monospace, 'Cascadia Mono', 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="600" fill="#f4f1ea">allpango</text>
+<text x="264" y="248" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" fill="#b3afa6">sync fan-out</text>
+<rect x="536" y="76" width="240" height="78" rx="14" fill="#171716" stroke="#2b2a27" stroke-width="1.3"/>
+<rect x="536" y="90" width="4" height="50" rx="2" fill="#7c9aff"/>
+<text x="560" y="109" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="19" font-weight="650" fill="#f4f1ea">Upload 3,544</text>
+<text x="560" y="134" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" fill="#b3afa6">new or changed, 4.6 GB</text>
+<rect x="536" y="172" width="240" height="78" rx="14" fill="#171716" stroke="#2b2a27" stroke-width="1.3"/>
+<rect x="536" y="186" width="4" height="50" rx="2" fill="#7d7970"/>
+<text x="560" y="205" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="19" font-weight="650" fill="#f4f1ea">Skip 87,945</text>
+<text x="560" y="230" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" fill="#b3afa6">same size and mtime</text>
+<rect x="536" y="268" width="240" height="78" rx="14" fill="#171716" stroke="#2b2a27" stroke-width="1.3"/>
+<rect x="536" y="282" width="4" height="50" rx="2" fill="#55524b"/>
+<text x="560" y="301" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="19" font-weight="650" fill="#f4f1ea">Empty 401</text>
+<text x="560" y="326" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" fill="#b3afa6">API rejects them</text>
+<text x="44" y="400" font-family="ui-monospace, 'Cascadia Mono', 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#8a867e">first full sync · 2026-11-12</text>
+</svg>
