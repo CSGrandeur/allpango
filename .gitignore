@@ -1,0 +1,7 @@
+/baidupan
+/bin/
+*.exe
+.env
+*.token
+*.json
+!go.mod
