@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" width="1280" height="400">
+  <defs>
+    <radialGradient id="glow" cx="0.74" cy="0.5" r="0.55">
+      <stop offset="0" stop-color="#4f7dff" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#4f7dff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="400" rx="24" fill="#0e0e0d"/>
+  <rect width="1280" height="400" rx="24" fill="url(#glow)"/>
+  <g transform="translate(88 60) scale(0.125)"><rect width="1024" height="1024" rx="224" fill="#151514" stroke="#2f2f2c" stroke-width="2"/><path d="M512 230 L724 470 L578 470 L578 640 L446 640 L446 470 L300 470 Z" fill="#4F7DFF"/><rect x="300" y="700" width="424" height="68" fill="#F4F1EA"/></g>
+  <text x="86" y="266" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="60" font-weight="700" letter-spacing="-1.5" fill="#f4f1ea">allpango</text>
+  <text x="88" y="310" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="23" fill="#a19d94">Send your backups to the cloud.</text>
+  <text x="88" y="344" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="19" fill="#6f6c64">把备份送上网盘，没变的文件不再传</text>
+  <rect x="700" y="56" width="492" height="288" rx="18" fill="#161615" stroke="#2f2f2c" stroke-width="1.5"/>
+  <circle cx="730" cy="86" r="5" fill="#2f2f2c"/>
+  <circle cx="748" cy="86" r="5" fill="#2f2f2c"/>
+  <circle cx="766" cy="86" r="5" fill="#2f2f2c"/>
+  <text x="792" y="90" font-family="ui-monospace, 'Cascadia Mono', 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="12" letter-spacing="2" fill="#6f6c64">ALLPANGO SYNC</text>
+  <text x="728" y="138" font-family="ui-monospace, 'Cascadia Mono', 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="16" fill="#f4f1ea">$ allpango sync --local ./backup \</text>
+  <text x="728" y="164" font-family="ui-monospace, 'Cascadia Mono', 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="16" fill="#f4f1ea">    --path /apps/pan/backup</text>
+  <text x="728" y="206" font-family="ui-monospace, 'Cascadia Mono', 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#a19d94">91890 files &#183; 50.4 GB</text>
+  <text x="728" y="234" font-family="ui-monospace, 'Cascadia Mono', 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#7c9aff">upload   3544 changed</text>
+  <text x="728" y="262" font-family="ui-monospace, 'Cascadia Mono', 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#6f6c64">skip     87945 unchanged</text>
+  <text x="728" y="290" font-family="ui-monospace, 'Cascadia Mono', 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#6f6c64">skip     401 empty</text>
+  <text x="728" y="322" font-family="ui-monospace, 'Cascadia Mono', 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#69db7c">done in 43m</text>
+</svg>
