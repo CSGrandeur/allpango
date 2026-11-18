@@ -32,7 +32,7 @@ func (v *VerifyResult) OK() bool {
 	return len(v.SizeMismatch) == 0 && len(v.Missing) == 0 && len(v.MtimeMismatch) == 0
 }
 
-// remoteIndex 把云端递归列表按「相对路径」建索引。
+// remoteIndex 把云端递归列表按「相对路径」建索引；同名多份时保留最新（其次较大）的一条。
 func remoteIndex(entries []api.Entry, remoteRoot string) map[string]api.Entry {
 	prefix := strings.TrimRight(remoteRoot, "/") + "/"
 	idx := make(map[string]api.Entry, len(entries))
@@ -41,7 +41,13 @@ func remoteIndex(entries []api.Entry, remoteRoot string) map[string]api.Entry {
 			continue
 		}
 		if strings.HasPrefix(e.Path, prefix) {
-			idx[strings.TrimPrefix(e.Path, prefix)] = e
+			rel := strings.TrimPrefix(e.Path, prefix)
+			if prev, exists := idx[rel]; exists {
+				if e.ServerMtime < prev.ServerMtime || (e.ServerMtime == prev.ServerMtime && e.Size <= prev.Size) {
+					continue
+				}
+			}
+			idx[rel] = e
 		}
 	}
 	return idx
@@ -116,6 +122,9 @@ func Seed(lister Lister, opts Options) (int, error) {
 	}
 	idx := remoteIndex(entries, opts.RemoteRoot)
 	manifest := LoadManifest(opts.ManifestPath)
+	if err := manifest.BindScope(opts.Provider, opts.RemoteRoot); err != nil {
+		return 0, err
+	}
 	seeded := 0
 	for _, f := range files {
 		if f.Size == 0 {
@@ -161,6 +170,9 @@ func SeedLegacy(lister Lister, opts Options) (int, error) {
 	}
 	idx := remoteIndex(entries, opts.RemoteRoot)
 	manifest := LoadManifest(opts.ManifestPath)
+	if err := manifest.BindScope(opts.Provider, opts.RemoteRoot); err != nil {
+		return 0, err
+	}
 	seeded := 0
 	for _, f := range files {
 		if f.Size == 0 {

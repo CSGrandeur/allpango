@@ -36,8 +36,9 @@ func (u ManagedUploader) UploadFile(localPath, remotePath string) (*api.UploadRe
 
 // Options 控制一次同步。
 type Options struct {
+	Provider     string // 网盘类型（baidu / weiyun），用于校验清单归属
 	LocalRoot    string // 本地备份目录
-	RemoteRoot   string // 云端目标目录（应用目录内的绝对路径）
+	RemoteRoot   string // 云端目标目录（规范化的绝对路径）
 	ManifestPath string // 清单文件；空字符串表示不用清单
 	Parallel     int    // 同时上传的文件数，默认 4
 	Logf         func(string, ...any)
@@ -102,6 +103,9 @@ func Run(up Uploader, opts Options) (*Stats, error) {
 	var manifest *Manifest
 	if opts.ManifestPath != "" {
 		manifest = LoadManifest(opts.ManifestPath)
+		if err := manifest.BindScope(opts.Provider, opts.RemoteRoot); err != nil {
+			return nil, err
+		}
 	}
 
 	var jobs []job

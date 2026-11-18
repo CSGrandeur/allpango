@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	gosync "sync"
 	"testing"
 
 	"github.com/CSGrandeur/allpango/internal/api"
@@ -11,13 +12,16 @@ import (
 
 // fakeUploader 记录调用，可注入失败。
 type fakeUploader struct {
+	mu      gosync.Mutex
 	calls   []string
 	failOn  string
 	rapidOn string
 }
 
 func (f *fakeUploader) UploadFile(local, remote string) (*api.UploadResult, error) {
+	f.mu.Lock()
 	f.calls = append(f.calls, remote)
+	f.mu.Unlock()
 	if remote == f.failOn {
 		return nil, errors.New("注入的失败")
 	}

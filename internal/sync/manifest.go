@@ -5,6 +5,7 @@ package sync
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -22,9 +23,12 @@ type ManifestEntry struct {
 }
 
 // Manifest 是清单文件：相对路径 → 状态。
+// Provider 与 RemoteRoot 绑定清单归属，避免跨网盘或跨目标目录误用。
 type Manifest struct {
-	Version int                      `json:"version"`
-	Files   map[string]ManifestEntry `json:"files"`
+	Version    int                      `json:"version"`
+	Provider   string                   `json:"provider,omitempty"`
+	RemoteRoot string                   `json:"remote_root,omitempty"`
+	Files      map[string]ManifestEntry `json:"files"`
 }
 
 // LoadManifest 读清单。文件不存在或损坏都返回空清单（退回全量核对），不报错。
@@ -38,6 +42,11 @@ func LoadManifest(path string) *Manifest {
 	if err := json.Unmarshal(data, &loaded); err != nil {
 		return m
 	}
+	if loaded.Version != 0 {
+		m.Version = loaded.Version
+	}
+	m.Provider = loaded.Provider
+	m.RemoteRoot = loaded.RemoteRoot
 	if loaded.Files != nil {
 		m.Files = loaded.Files
 	}
@@ -80,6 +89,47 @@ func (m *Manifest) Mark(rel string, size, mtime int64, md5, remotePath string) {
 		Size: size, Mtime: mtime, MD5: md5,
 		UploadedAt: time.Now().Unix(), RemotePath: remotePath,
 	}
+}
+
+// BindScope 校验并绑定清单的网盘类型与远端根目录，防止跨盘或跨目录串用。
+func (m *Manifest) BindScope(provider, remoteRoot string) error {
+	normRoot := normalizeScopeRoot(remoteRoot)
+	if m.Provider != "" && provider != "" && m.Provider != provider {
+		return fmt.Errorf("清单属于网盘 %s，不能用于 %s，请更换 --manifest 文件", m.Provider, provider)
+	}
+	if m.RemoteRoot != "" && normRoot != "" && normalizeScopeRoot(m.RemoteRoot) != normRoot {
+		return fmt.Errorf("清单属于远端目录 %s，与当前目标 %s 不一致，请更换 --manifest 文件", m.RemoteRoot, normRoot)
+	}
+	// 兼容旧版 v1 清单（无顶层归属字段）：检查已有条目的远端路径前缀。
+	if m.Provider == "" && m.RemoteRoot == "" && normRoot != "" {
+		for rel, entry := range m.Files {
+			if entry.RemotePath == "" {
+				continue
+			}
+			want := JoinRemote(normRoot, rel)
+			if entry.RemotePath != want {
+				return fmt.Errorf("清单已有记录指向 %s（期望 %s），不能跨目录或跨网盘复用", entry.RemotePath, want)
+			}
+		}
+	}
+	if provider != "" && m.Provider == "" {
+		m.Provider = provider
+	}
+	if normRoot != "" && m.RemoteRoot == "" {
+		m.RemoteRoot = normRoot
+	}
+	return nil
+}
+
+func normalizeScopeRoot(p string) string {
+	if p == "" {
+		return ""
+	}
+	t := strings.TrimRight(p, "/")
+	if t == "" {
+		return "/"
+	}
+	return t
 }
 
 // LocalFile 是本地扫描到的一個文件。

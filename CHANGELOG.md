@@ -8,6 +8,13 @@ Entries describe user-facing changes only.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-18
+
+### Added
+- Support for Tencent Weiyun via the official MCP HTTP interface: streaming SHA-1 state verification, 512 KB chunked uploads, rapid-upload detection, directory caching, token pasting/verification (`login -p weiyun`), and auto-detection from `--token` files containing `mcp_token`.
+- Multi-remote configuration (`-c`/`--config`, `-r`/`--remote`, `--all`) and `remotes` command to list targets and sync/verify multiple clouds in one invocation.
+- Manifest scope binding (`provider` + `remote_root`) to prevent accidentally reusing a manifest across providers or target directories.
+
 ### Changed
 - Redesigned the sync diagram and tidied the README layout: install via `go install`, a flag column in the command table, and a section on taking over another tool's uploads.
 
@@ -27,4 +34,5 @@ First release.
 - Never deletes or moves remote files.
 - Credentials and tokens are read only from caller-specified files; never printed, never built in.
 
+[0.2.0]: https://github.com/CSGrandeur/allpango/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/CSGrandeur/allpango/releases/tag/v0.1.0

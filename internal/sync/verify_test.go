@@ -186,3 +186,30 @@ func TestWalkLocalIgnoresStateFiles(t *testing.T) {
 		t.Fatalf("状态文件应被忽略: %+v", files)
 	}
 }
+
+func TestVerifyDuplicateRemoteEntryPicksLatest(t *testing.T) {
+	dir, files := setupVerifyTree(t)
+	root := "/backup"
+	var entries []api.Entry
+	for _, f := range files {
+		if f.Size == 0 {
+			continue
+		}
+		if f.Rel == "a.bin" {
+			// 同名多份：旧份大小不对，新份大小一致
+			entries = append(entries,
+				api.Entry{Path: JoinRemote(root, f.Rel), Size: f.Size + 99, ServerMtime: 100},
+				api.Entry{Path: JoinRemote(root, f.Rel), Size: f.Size, ServerMtime: 200},
+			)
+		} else {
+			entries = append(entries, entryFor(root, f, f.Size, 0))
+		}
+	}
+	v, err := Verify(fakeLister{entries}, Options{LocalRoot: dir, RemoteRoot: root})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !v.OK() || v.Matched != 2 {
+		t.Fatalf("应保留最新条目并核对通过: %+v", v)
+	}
+}

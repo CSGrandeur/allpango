@@ -92,3 +92,47 @@ func TestWalkLocalPermissionSkipped(t *testing.T) {
 		t.Fatalf("应记录 1 个跳过路径: %v", skipped)
 	}
 }
+
+func TestManifestBindScope(t *testing.T) {
+	m := &Manifest{Version: 1, Files: map[string]ManifestEntry{}}
+	if err := m.BindScope("baidu", "/apps/x/backup/"); err != nil {
+		t.Fatal(err)
+	}
+	if m.Provider != "baidu" || m.RemoteRoot != "/apps/x/backup" {
+		t.Fatalf("归属未写入: %+v", m)
+	}
+	if err := m.BindScope("weiyun", "/apps/x/backup"); err == nil {
+		t.Fatal("跨网盘应拒绝")
+	}
+	if err := m.BindScope("baidu", "/apps/x/other"); err == nil {
+		t.Fatal("跨目录应拒绝")
+	}
+	p := filepath.Join(t.TempDir(), "scope.json")
+	if err := m.Save(p); err != nil {
+		t.Fatal(err)
+	}
+	reloaded := LoadManifest(p)
+	if reloaded.Provider != "baidu" || reloaded.RemoteRoot != "/apps/x/backup" {
+		t.Fatalf("LoadManifest 未保留归属字段: %+v", reloaded)
+	}
+	if err := reloaded.BindScope("weiyun", "/apps/x/backup"); err == nil {
+		t.Fatal("往返后跨网盘应拒绝")
+	}
+
+	// 旧版 v1 清单无顶层归属字段，按条目前缀校验与平滑升级。
+	v1 := &Manifest{
+		Version: 1,
+		Files: map[string]ManifestEntry{
+			"a.bin": {Size: 10, Mtime: 100, RemotePath: "/apps/x/backup/a.bin"},
+		},
+	}
+	if err := v1.BindScope("weiyun", "/备份/backup"); err == nil {
+		t.Fatal("旧清单跨目录应拒绝")
+	}
+	if err := v1.BindScope("baidu", "/apps/x/backup"); err != nil {
+		t.Fatalf("旧清单同目录应平滑升级: %v", err)
+	}
+	if v1.Provider != "baidu" || v1.RemoteRoot != "/apps/x/backup" {
+		t.Fatalf("旧清单升级未写归属: %+v", v1)
+	}
+}

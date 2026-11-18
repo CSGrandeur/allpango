@@ -1,6 +1,5 @@
-// allpango 把备份送到网盘。第一个支持的盘是百度网盘开放平台。
-// 只做备份需要的能力：登录、刷新令牌、列目录、容量、上传、目录同步。
-// 不删除、不移动云端文件。
+// allpango 把备份送到网盘（支持百度网盘开放平台与腾讯微云）。
+// 只做备份需要的能力：授权、列目录、上传、增量同步与核对。不删除、不移动云端文件。
 package main
 
 import (
@@ -8,21 +7,26 @@ import (
 	"os"
 )
 
-const usage = `allpango：把备份送到网盘（当前支持百度网盘）
+const usage = `allpango：把备份送到网盘（支持百度网盘与腾讯微云）
 
-用法:
-  allpango login   --cred <凭证文件> --token <令牌文件>
-  allpango refresh --cred <凭证文件> --token <令牌文件>
-  allpango quota   --cred <凭证文件> --token <令牌文件>
-  allpango ls      --cred <凭证文件> --token <令牌文件> --path <云端目录> [--json]
-  allpango upload  --cred <凭证文件> --token <令牌文件> --local <本地文件> --path <云端文件路径>
-  allpango sync    --cred <凭证文件> --token <令牌文件> --local <本地目录> --path <云端目录>
-                   [--manifest <清单文件>] [--parallel N] [--seed | --seed-legacy]
-  allpango verify  --cred <凭证文件> --token <令牌文件> --local <本地目录> --path <云端目录> [--json]
+直连用法（百度需 --cred + --token；微云只需 --token，login 时加 -p weiyun）:
+  allpango login   [--cred <凭证> | -p weiyun] --token <令牌>
+  allpango refresh [--cred <凭证>] --token <令牌>
+  allpango quota   --cred <凭证> --token <令牌>
+  allpango ls      [--cred <凭证>] --token <令牌> --path <云端目录> [--json]
+  allpango upload  [--cred <凭证>] --token <令牌> --local <本地文件> --path <云端文件>
+  allpango sync    [--cred <凭证>] --token <令牌> --local <本地目录> --path <云端目录>
+                   [--manifest <清单>] [--parallel N] [--seed | --seed-legacy]
+  allpango verify  [--cred <凭证>] --token <令牌> --local <本地目录> --path <云端目录>
+                   [--size-only] [--json]
 
-凭证文件是 JSON：{"app_key": "...", "app_secret": "..."}
-令牌文件由 login 创建、由程序自动刷新写回，不要手工编辑。
-云端路径必须在应用的 /apps/<应用名> 目录内。
+多网盘配置用法（-c/--config 指定配置文件，-r 指定名称或 --all 全选）:
+  allpango remotes -c <配置文件> [--json]
+  allpango ls      -c <配置文件> [-r <名称>] [--path <云端目录>]
+  allpango sync    -c <配置文件> [-r <名称1,名称2> | --all] --local <本地目录>
+  allpango verify  -c <配置文件> [-r <名称1,名称2> | --all] --local <本地目录>
+
+百度路径须在 /apps/<应用名> 内；微云路径从网盘根起算（如 /备份/backup）。
 程序不删除云端文件。退出码：成功 0，失败非 0。
 `
 
@@ -34,6 +38,8 @@ func main() {
 	cmd, args := os.Args[1], os.Args[2:]
 	var err error
 	switch cmd {
+	case "remotes":
+		err = runRemotes(args)
 	case "login":
 		err = runLogin(args)
 	case "refresh":

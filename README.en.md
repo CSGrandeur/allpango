@@ -20,17 +20,16 @@
 
 <br>
 
-allpango backs up a local directory to Baidu Netdisk. Each day's dumps go up; files that have not changed are not sent again. One static binary, no runtime dependencies.
+allpango backs up a local directory to Baidu Netdisk or Tencent Weiyun. Each day's dumps go up; files that have not changed are not sent again. One static binary, no runtime dependencies.
 
-It uploads and overwrites. There are no delete or move commands.
+It uploads and creates directories, with no delete or move commands. One config file can hold both remotes so a single command syncs them in sequence.
 
 ## Features
 
-- Login uses a device code, so no callback URL is needed. The access token refreshes before it expires, and the new refresh token goes back into the file.
-- Uploads follow the three official steps: precreate, slices, create. A same-name file is overwritten, not saved as `name(1)`. Past 1024 slices the slice size grows on its own.
-- `sync` keeps a local manifest of what it has sent (size and mtime) and stops asking the disk about unchanged files. Delete the manifest and it gets slower, not wrong.
-- `verify` ignores the manifest, lists the cloud directly and compares size and mtime file by file.
-- Credentials, token and directories are all required; nothing is guessed. Exit 0 on success, non-zero otherwise.
+- Baidu Netdisk uses device-code login with no callback URL. The access token refreshes before expiry and writes the new refresh token back to disk. Uploads run in three steps (`precreate`, slices, `create`), overwrite same-name files instead of creating `name(1)`, and grow the slice size past 1024 parts.
+- Tencent Weiyun uses the official MCP HTTP interface with only a token file. Uploads check streaming SHA-1 states in 512 KB slices, cache directories to cut down listing calls, and rapid-upload when identical content already exists.
+- `sync` skips unchanged files via a local manifest (size and mtime); `verify` checks directly against the cloud; `sync --seed` rebuilds the manifest from a cloud listing. Each manifest binds its provider and remote root to prevent cross-drive reuse.
+- You can pass credentials directly (Weiyun is auto-detected from its token file) or put remotes in `allpango.json` and run `--all` or `-r baidu,weiyun`. Credentials, tokens and paths are all required; exit 0 on success, non-zero otherwise.
 
 ## Install
 
@@ -44,6 +43,10 @@ go install github.com/CSGrandeur/allpango/cmd/allpango@latest
 
 ## Log in
 
+Credentials and tokens are read only from the files you name, saved with mode 0600, never printed and never built in.
+
+### Baidu Netdisk
+
 Create an app on the [Baidu Netdisk Open Platform](https://pan.baidu.com/union/console/applist) and put its keys in a credentials file:
 
 ```json
@@ -51,38 +54,89 @@ Create an app on the [Baidu Netdisk Open Platform](https://pan.baidu.com/union/c
 ```
 
 ```bash
-allpango login --cred cred.json --token token.json
+allpango login --cred baidu-cred.json --token baidu-token.json
 ```
 
-The program prints a user code and a verification URL. Sign in to your Baidu account in a browser and enter the code; the token is written to `token.json` (mode 0600) and refreshed automatically afterwards. Credentials and tokens are read only from the files you name. They are never printed and never built in.
+The program prints a user code and a verification URL. Sign in to your Baidu account in a browser and enter the code; the token is written to `baidu-token.json` and refreshed automatically afterwards.
 
 > [!NOTE]
-> An app can only write under its own `/apps/<appname>` directory; the examples below use `myapp`. To upload into an existing backup directory, use the keys of the app that created it.
+> A Baidu app can only write under `/apps/<appname>`; the examples below use `myapp`. To upload into an existing backup directory, use the keys of the app that created it.
+
+### Tencent Weiyun
+
+Sign in on the [Weiyun OpenClaw page](https://www.weiyun.com/act/openclaw) to get your `mcp_token`. Run `login` and paste either the raw token or JSON; allpango verifies it online before saving:
+
+```bash
+allpango login -p weiyun --token weiyun-token.json
+```
+
+If you already have an OpenClaw token file (`{"mcp_token": "..."}`), passing `--token weiyun-token.json` is enough for subsequent commands — `-p weiyun` and `--cred` are not needed.
 
 ## Usage
 
-```bash
-auth="--cred cred.json --token token.json"
-dir=/apps/myapp/backup
+### Single remote
 
-allpango quota  $auth
-allpango ls     $auth --path $dir
-allpango upload $auth --local ./db.sql.gz --path $dir/db.sql.gz
-allpango sync   $auth --local ./backup --path $dir --manifest backup.mf.json
-allpango verify $auth --local ./backup --path $dir
+```bash
+# Baidu Netdisk
+bd="--cred baidu-cred.json --token baidu-token.json"
+allpango quota  $bd
+allpango ls     $bd --path /apps/myapp/backup
+allpango sync   $bd --local ./backup --path /apps/myapp/backup --manifest baidu.mf.json
+allpango verify $bd --local ./backup --path /apps/myapp/backup
+
+# Tencent Weiyun (auto-detected from token file; paths start at drive root)
+wy="--token weiyun-token.json"
+allpango ls     $wy --path /Backups/backup
+allpango upload $wy --local ./db.sql.gz --path /Backups/backup/db.sql.gz
+allpango sync   $wy --local ./backup --path /Backups/backup --manifest weiyun.mf.json
+allpango verify $wy --local ./backup --path /Backups/backup
+```
+
+### Multi-cloud backup
+
+Write an `allpango.json` config pointing to your key/token files (inline secrets are rejected):
+
+```json
+{
+  "remotes": {
+    "baidu": {
+      "provider": "baidu",
+      "cred": "baidu-cred.json",
+      "token": "baidu-token.json",
+      "path": "/apps/myapp/backup",
+      "manifest": "baidu.mf.json"
+    },
+    "weiyun": {
+      "provider": "weiyun",
+      "token": "weiyun-token.json",
+      "path": "/Backups/backup",
+      "manifest": "weiyun.mf.json"
+    }
+  }
+}
+```
+
+Relative file paths resolve against the config file directory (`~/` is supported). Failure on one remote does not stop the others, and the process exits non-zero if any remote failed.
+
+```bash
+allpango remotes -c allpango.json
+allpango ls      -c allpango.json -r weiyun
+allpango sync    -c allpango.json --all --local ./backup
+allpango verify  -c allpango.json -r baidu,weiyun --local ./backup
 ```
 
 | Command | Purpose | Common flags |
 | :-- | :-- | :-- |
-| `login` | Device-code authorization, creates the token file | |
-| `refresh` | Refresh the token manually | |
-| `quota` | Total, used and free space | `--json` |
-| `ls` | List a directory: name, size, mtime | `--path` `--json` |
-| `upload` | Upload one file, overwriting the same name | `--local` `--path` |
-| `sync` | Incremental sync of a whole directory | `--manifest` `--parallel` `--seed` `--seed-legacy` `--json` |
-| `verify` | Per-file check against the cloud, non-zero exit on mismatch | `--size-only` `--json` |
+| `remotes` | List configured remotes and default paths | `-c` `--json` |
+| `login` | Device-code login (Baidu) / token check (Weiyun) | `-p` `--cred` `--token` `-c` `-r` |
+| `refresh` | Refresh token (Baidu) / verify token (Weiyun) | `--cred` `--token` `-c` `-r` |
+| `quota` | Total, used and free space (Baidu) | `--cred` `--token` `--json` |
+| `ls` | List a directory: name, size, mtime | `--path` `--json` `-c` `-r` |
+| `upload` | Upload one file | `--local` `--path` `-c` `-r` |
+| `sync` | Incremental sync of a whole directory | `--manifest` `--parallel` `--all`<br>`--seed` `--seed-legacy` `--json` |
+| `verify` | Per-file check against the cloud, non-zero on mismatch | `--size-only` `--all` `--json` |
 
-Every command takes `--cred` and `--token`; add `-v` for per-file progress. `sync` uploads 4 files at a time by default; change it with `--parallel`.
+Add `-v` for per-file progress. `sync` uploads 4 files concurrently by default (`--parallel` changes it). Multi-remote `--json` wraps results in `{"results": [...]}`.
 
 ## Sync and verify
 
@@ -93,36 +147,33 @@ Every command takes `--cred` and `--token`; add `-v` for per-file progress. `syn
   </picture>
 </p>
 
-The manifest records that a file was sent successfully once. It does not claim the cloud still has it. If the manifest is gone, or something else changed the cloud, `sync` precreates each file and lets the disk decide.
+The manifest records that a file went up once, and binds `provider` and `remote_root` so a Baidu manifest cannot be reused for Weiyun or another directory. If the manifest is gone, or something else changed the cloud, `sync` precreates each file and lets the cloud decide on slices.
 
-Change detection uses size and mtime, not hashes. A backup directory is mostly fresh dumps each day, so mtime is enough. Precreate carries the whole-file MD5, and the disk may accept identical content without the slices.
+Local change detection uses size and mtime, not hashes; daily dump directories do not need full re-hashing. Because Weiyun's MCP upload does not store a client `local_mtime`, `verify` and `sync --seed` on Weiyun compare file size while the local manifest still tracks size and mtime.
 
-To take over a directory another tool uploaded, run `sync --seed` once. It rebuilds the manifest from the cloud listing, and files already there are not sent again. If that tool's timestamps do not match yours, use `--seed-legacy` to compare size only, and verify with `verify --size-only`.
-
-A scheduled job can run `verify` after `sync`; it asks the cloud directly.
+To take over a directory another tool uploaded, run `sync --seed` once to rebuild the manifest from the cloud listing. If an older Baidu tool wrote upload timestamps instead of file mtimes, use `--seed-legacy` and `verify --size-only`. A scheduled job can run `verify` after `sync`; it asks the cloud directly.
 
 ## Limits
 
-- The per-file cap depends on the account: 4 GB normal, 10 GB member, 20 GB super member. At most 1024 slices.
-- Empty files cannot go up; the API rejects them. They are logged and skipped, not counted as failures.
-- The md5 in a listing is a cloud hash, not the file's real MD5. Do not compare it with a local one.
-- Rapid upload is the disk's call. On some accounts identical content still goes up in slices; the saving then comes from the per-file requests you skip.
+- Empty files cannot be uploaded on either drive; they are logged and skipped without failing the run. No delete or move commands exist, so extra remote files are counted and left untouched.
+- On Baidu Netdisk, the per-file cap depends on the account (4 GB normal, 10 GB member, 20 GB super member), with at most 1024 slices. The `md5` in listings is a cloud hash, not the file's real MD5. Rapid upload is up to the server; some accounts still upload slices for identical content.
+- On Tencent Weiyun, slices are fixed at 512 KB encoded as JSON Base64 (~33% wire overhead). Daily MCP quotas apply (`117401` stops immediately without retrying), no quota query endpoint exists (`quota` returns an error), and identical content hits rapid upload while different content under an existing name keeps the original and saves a `name(1)` copy.
 
 ## FAQ
 
 <details>
-<summary><b>Where is the token stored?</b></summary>
+<summary><b>Where is the token stored, and does it rotate?</b></summary>
 <br>
 
-In the file you pass to `--token`, mode 0600. A refresh writes a temp file and renames it. The refresh token is good for one use: each refresh replaces it and invalidates the old one, so do not edit the file by hand and do not let two processes share a copy.
+In the file passed to `--token`, mode 0600, written via a temp file and atomic rename. Baidu's `refresh_token` is single-use and rotates on every refresh — never edit it by hand or share one file between two processes. Weiyun uses a static `mcp_token` until you reset it or it expires on OpenClaw.
 
 </details>
 
 <details>
-<summary><b>What if the refresh token stops working?</b></summary>
+<summary><b>What if a token stops working?</b></summary>
 <br>
 
-Run `login` again. A failed refresh usually means the token is already invalid; retrying the old value will not help.
+Run `login` again. On Baidu a failed refresh means the `refresh_token` is already dead; on Weiyun HTTP 401 or `117402` / `117407` means you need a fresh `mcp_token` from OpenClaw.
 
 </details>
 
@@ -138,7 +189,7 @@ No. There are no delete or move commands in the program. Sync only deals with fi
 <summary><b>Does an interrupted sync re-upload everything?</b></summary>
 <br>
 
-No. The manifest is written after each file, so a re-run skips what already went up. The file that was cut off is precreated again, and the disk decides where to resume.
+No. The manifest is written after each file, so a re-run skips what already went up. The file that was cut off is precreated again, and the cloud decides where to resume or whether content already exists.
 
 </details>
 
