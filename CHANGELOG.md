@@ -9,7 +9,7 @@ Entries describe user-facing changes only.
 ## [Unreleased]
 
 ### Changed
-- Redesigned the sync diagram in the README (pending review).
+- Redesigned the sync diagram and tidied the README layout: install via `go install`, a flag column in the command table, and a section on taking over another tool's uploads.
 
 ## [0.1.0] - 2026-11-12
 
